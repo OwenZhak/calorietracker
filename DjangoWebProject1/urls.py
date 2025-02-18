@@ -1,0 +1,14 @@
+from datetime import datetime
+from django.urls import path, include
+from django.contrib import admin
+from django.contrib.auth.views import LoginView
+from app import forms, views
+
+urlpatterns = [
+    path('', views.log_food, name='home'),  # Empty path that redirects to log_food
+    path('login/', LoginView.as_view(template_name='app/login.html', authentication_form=forms.BootstrapAuthenticationForm, extra_context={'title': 'Log in', 'year': datetime.now().year}), name='login'),
+    path('logout/', views.custom_logout, name='logout'),
+    path('admin/', admin.site.urls),
+    path('log_food/', views.log_food, name='log_food'),
+    path('register/', views.register, name='register'),  # Add this line for registration
+]
