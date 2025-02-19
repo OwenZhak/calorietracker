@@ -1,0 +1,13 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+<div class="mt-5">
+    <h2>Edit Food Log</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Update Log</button>
+        <a href="{% url 'log_food' %}?date={{ log_entry.date|date:'Y-m-d' }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

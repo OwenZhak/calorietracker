@@ -17,6 +17,8 @@ html, body {
 .navbar {
     margin: 0;
     padding: 0;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 /* Ensure the footer sticks to the bottom without extra space */
@@ -42,3 +44,49 @@ body > .container {
 .mt-4 {
     margin-top: 0 !important;
 }
+
+/* Add your site styles here */
+
+.navbar-brand-spaced {
+    padding-left: 1rem;
+}
+
+.navbar-collapse-spaced {
+    padding-right: 1rem;
+}
+
+.table th,
+.table td {
+    vertical-align: middle; /* Vertically center the content */
+}
+
+.table td:nth-child(3) {
+    text-align: center; /* Center-align the calories column */
+}
+
+.table td:nth-child(2) {
+    text-align: center; /* Center-align the calories column */
+}
+
+.food-log-table {
+    table-layout: fixed; /* Use fixed table layout */
+    width: 100%; /* Ensure the table takes up the full width */
+}
+
+.food-log-table th,
+.food-log-table td {
+    padding: 0.75rem; /* Increase padding for more space */
+    vertical-align: middle; /* Vertically center the content */
+    word-break: break-word; /* Prevent long words from breaking the layout */
+}
+
+.food-log-table th:nth-child(2), /* Center-align the quantity column title */
+.food-log-table td:nth-child(2) {
+    text-align: center; /* Center-align the quantity column */
+}
+
+.food-log-table th:nth-child(3) {
+    text-align: center; /* Center-align the calories column title */
+}
+
+

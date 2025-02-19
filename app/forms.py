@@ -5,7 +5,7 @@ Definition of forms.
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
-from .models import FoodItemLog
+from .models import FoodItemLog, FoodItem
 
 class BootstrapAuthenticationForm(AuthenticationForm):
     """Authentication form which uses bootstrap CSS."""
@@ -32,3 +32,8 @@ class FoodItemLogForm(forms.ModelForm):
         if quantity <= 0:
             raise forms.ValidationError("Quantity in grams must be greater than 0.")
         return quantity
+
+class EditFoodItemLogForm(forms.ModelForm):
+    class Meta:
+        model = FoodItemLog
+        fields = ['food_item', 'quantity_in_grams']

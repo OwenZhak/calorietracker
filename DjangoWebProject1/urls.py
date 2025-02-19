@@ -11,4 +11,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('log_food/', views.log_food, name='log_food'),
     path('register/', views.register, name='register'),  # Add this line for registration
+    path('edit_food_log/<int:log_id>/', views.edit_food_log, name='edit_food_log'),
 ]
