@@ -1,0 +1,125 @@
+/* Ensure the body and HTML take up the full height and use flexbox */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure the main content area grows to fill the available space */
+.container {
+    flex: 1;
+    padding: 0 15px;
+}
+
+/* Remove any margin or padding from the navbar */
+.navbar {
+    margin: 0;
+    padding: 0;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Ensure the footer sticks to the bottom without extra space */
+.footer {
+    margin-top: auto;
+    padding: 1rem 0;
+    background-color: #f8f9fa;
+    text-align: center;
+}
+
+/* Fix any potential body padding that Bootstrap may add */
+body > .container {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* Override Bootstrap's default margin for the navbar */
+.navbar {
+    margin-bottom: 0 !important;
+}
+
+/* Fix any unwanted vertical spacing from Bootstrap */
+.mt-4 {
+    margin-top: 0 !important;
+}
+
+/* Add your site styles here */
+
+.navbar-brand-spaced {
+    padding-left: 1rem;
+}
+
+.navbar-collapse-spaced {
+    padding-right: 1rem;
+}
+
+.table th,
+.table td {
+    vertical-align: middle; /* Vertically center the content */
+}
+
+.table td:nth-child(3) {
+    text-align: center; /* Center-align the calories column */
+}
+
+.table td:nth-child(2) {
+    text-align: center; /* Center-align the calories column */
+}
+
+.food-log-table {
+    table-layout: fixed; /* Use fixed table layout */
+    width: 100%; /* Ensure the table takes up the full width */
+}
+
+.food-log-table th,
+.food-log-table td {
+    padding: 0.75rem; /* Increase padding for more space */
+    vertical-align: middle; /* Vertically center the content */
+    word-break: break-word; /* Prevent long words from breaking the layout */
+}
+
+.food-log-table th:nth-child(2), /* Center-align the quantity column title */
+.food-log-table td:nth-child(2) {
+    text-align: center; /* Center-align the quantity column */
+}
+
+.food-log-table th:nth-child(3) {
+    text-align: center; /* Center-align the calories column title */
+}
+
+/* Ensure the Select2 container matches the Bootstrap form control height */
+.select2-container--default .select2-selection--single {
+    height: 38px !important; /* Match Bootstrap form control height */
+    line-height: 38px !important; /* Match Bootstrap form control line-height */
+    display: flex !important; /* Use flexbox for vertical alignment */
+    align-items: center !important; /* Center items vertically */
+    color: #495057 !important; /* Match Bootstrap text color */
+}
+
+/* Ensure the Select2 rendered text is vertically centered and matches Bootstrap text color */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: normal !important; /* Reset line-height */
+    padding-left: 0px !important; /* Add some padding to the left */
+    color: #495057 !important; /* Match Bootstrap text color */
+}
+
+/* Ensure the Select2 dropdown arrow matches the height */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important; /* Make arrow container full height */
+    display: flex !important; /* Use flexbox for vertical alignment */
+    align-items: center !important; /* Center arrow vertically */
+}
+
+/* Ensure the Select2 dropdown arrow is vertically centered */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    top: auto !important; /* Reset top position */
+    transform: none !important; /* Reset transform */
+}
+
+
+
+
+
+

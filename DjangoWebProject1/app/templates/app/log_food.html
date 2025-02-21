@@ -1,0 +1,62 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="mt-5">  {# Added margin-top to the entire content #}
+    {% if login_required %}
+        <p>You must log in before tracking food calories.</p>
+        <form method="post" action="?date={{ selected_date|date:'Y-m-d' }}" id="food-log-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
+    {% else %}
+        <div class="d-flex justify-content-center align-items-center mt-4 mb-4">
+            <a href="?date={{ previous_date }}" class="btn btn-link">Previous Day</a>
+            <h3 class="mb-0 mx-3">{{ selected_date }}</h3>
+            <a href="?date={{ next_date }}" class="btn btn-link">Next Day</a>
+        </div>
+
+        <form method="post" action="?date={{ selected_date|date:'Y-m-d' }}" id="food-log-form">
+            {% csrf_token %}
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+            
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Log Food</button>
+        </form>
+
+        <!-- Centered and removed date -->
+        <h3 class="text-center mt-4">Food Log</h3>
+
+        <table class="table food-log-table">
+            <colgroup>
+                <col style="width: 40%;">
+                <col style="width: 20%;">
+                <col style="width: 20%;">
+                <col style="width: 20%;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th class="text-center">Quantity (g)</th>
+                    <th class="text-center">Calories</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in food_item_logs %}
+                <tr>
+                    <td>{{ log.food_item.name }} ({{ log.food_item.manufacturer }})</td>
+                    <td class="text-center">{{ log.quantity_in_grams }}</td>
+                    <td class="text-center">{{ log.total_calories|floatformat:0 }}</td>
+                    <td class="text-right">
+                        <a href="{% url 'edit_food_log' log.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    </td>
+                </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="text-center">Total Calories: {{ total_calories|floatformat:0 }}</p>
+    {% endif %}
+</div>
+{% endblock %}
