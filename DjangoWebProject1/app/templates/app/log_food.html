@@ -11,9 +11,9 @@
         <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
     {% else %}
         <div class="d-flex justify-content-center align-items-center mt-4 mb-4">
-            <a href="?date={{ previous_date }}" class="btn btn-link">Previous Day</a>
+            <a href="?date={{ previous_date }}" class="btn btn-outline-primary">Previous Day</a>
             <h3 class="mb-0 mx-3">{{ selected_date }}</h3>
-            <a href="?date={{ next_date }}" class="btn btn-link">Next Day</a>
+            <a href="?date={{ next_date }}" class="btn btn-outline-primary">Next Day</a>
         </div>
 
         <form method="post" action="?date={{ selected_date|date:'Y-m-d' }}" id="food-log-form">
