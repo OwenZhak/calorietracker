@@ -14,6 +14,7 @@ from .models import FoodItemLog, FoodItem
 from .forms import FoodItemLogForm, EditFoodItemLogForm
 import unicodedata
 from calendar import monthrange
+import calendar as cal
 
 class FoodItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -120,9 +121,11 @@ def calendar(request):
             'calories': total_calories
         })
     
+    month_name = cal.month_name[month]
+    
     context = {
         'year': year,
-        'month': month,
+        'month': month_name,
         'calendar_data': calendar_data,
         'previous_month': (month - 1) if month > 1 else 12,
         'previous_year': year if month > 1 else year - 1,
