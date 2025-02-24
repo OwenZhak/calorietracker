@@ -13,6 +13,7 @@ from dal import autocomplete
 from .models import FoodItemLog, FoodItem
 from .forms import FoodItemLogForm, EditFoodItemLogForm
 import unicodedata
+from calendar import monthrange
 
 class FoodItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -100,6 +101,36 @@ def edit_food_log(request, log_id):
             'year': datetime.now().year,
         }
     )
+
+@login_required
+def calendar(request):
+    year = request.GET.get('year', datetime.now().year)
+    month = request.GET.get('month', datetime.now().month)
+    year, month = int(year), int(month)
+    
+    first_day_of_month, days_in_month = monthrange(year, month)
+    dates = [datetime(year, month, day) for day in range(1, days_in_month + 1)]
+    
+    calendar_data = []
+    for date in dates:
+        food_logs = FoodItemLog.objects.filter(user=request.user, date=date)
+        total_calories = sum(log.total_calories for log in food_logs)
+        calendar_data.append({
+            'date': date,
+            'calories': total_calories
+        })
+    
+    context = {
+        'year': year,
+        'month': month,
+        'calendar_data': calendar_data,
+        'previous_month': (month - 1) if month > 1 else 12,
+        'previous_year': year if month > 1 else year - 1,
+        'next_month': (month + 1) if month < 12 else 1,
+        'next_year': year if month < 12 else year + 1,
+    }
+    
+    return render(request, 'app/calendar.html', context)
 
 def custom_logout(request):
     """Logs out the user and redirects to the home page."""

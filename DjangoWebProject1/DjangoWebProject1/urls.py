@@ -16,5 +16,6 @@ urlpatterns = [
         'fooditem-autocomplete/',
         views.FoodItemAutocomplete.as_view(),
         name='fooditem-autocomplete',
-    ),  # Add this line
+    ),
+    path('calendar/', views.calendar, name='calendar'),
 ]
