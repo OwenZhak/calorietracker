@@ -10,8 +10,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from dal import autocomplete
-from .models import FoodItemLog, FoodItem
-from .forms import FoodItemLogForm, EditFoodItemLogForm
+from .models import FoodItemLog, FoodItem, Profile
+from .forms import FoodItemLogForm, EditFoodItemLogForm, ProfileForm
 import unicodedata
 from calendar import monthrange
 import calendar as cal
@@ -63,29 +63,36 @@ def log_food(request: HttpRequest):
 
     food_item_logs = FoodItemLog.objects.filter(user=request.user, date=selected_date)
     total_calories = sum(log.total_calories for log in food_item_logs)
-        # Add these lines to calculate total macronutrients
     total_proteins = sum(log.total_proteins for log in food_item_logs)
     total_carbohydrates = sum(log.total_carbohydrates for log in food_item_logs)
     total_fats = sum(log.total_fats for log in food_item_logs)
+    
+    # Add these lines
+    recommended_calories = request.user.profile.daily_calories
+    recommended_proteins = request.user.profile.daily_protein_needs
+    recommended_carbs = request.user.profile.daily_carbs_needs
+    recommended_fats = request.user.profile.daily_fat_needs
+    remaining_calories = recommended_calories - total_calories
 
-    return render(
-        request,
-        'app/log_food.html',
-        {
-            'form': form,
-            'food_item_logs': food_item_logs,
-            'selected_date': selected_date,
-            'previous_date': previous_date.strftime('%Y-%m-%d'),
-            'next_date': next_date.strftime('%Y-%m-%d'),
-            'total_calories': total_calories,
-            # Add these lines to pass macronutrients to template
-            'total_proteins': total_proteins,
-            'total_carbohydrates': total_carbohydrates,
-            'total_fats': total_fats,
-            'login_required': not request.user.is_authenticated,
-            'year': year,
-        }
-    )
+    context = {
+        'form': form,
+        'food_item_logs': food_item_logs,
+        'selected_date': selected_date,
+        'previous_date': previous_date.strftime('%Y-%m-%d'),
+        'next_date': next_date.strftime('%Y-%m-%d'),
+        'total_calories': total_calories,
+        'total_proteins': total_proteins,
+        'total_carbohydrates': total_carbohydrates,
+        'total_fats': total_fats,
+        'recommended_calories': recommended_calories,
+        'recommended_proteins': recommended_proteins,
+        'recommended_carbs': recommended_carbs,
+        'recommended_fats': recommended_fats,
+        'remaining_calories': remaining_calories,
+        'login_required': not request.user.is_authenticated,
+        'year': year,
+    }
+    return render(request, 'app/log_food.html', context)
 
 @login_required
 def edit_food_log(request, log_id):
@@ -159,3 +166,30 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'app/register.html', {'form': form})
 
+@login_required
+def profile(request):
+    # Get or create profile
+    profile_obj, created = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'height': 170,  # Default height in cm
+            'weight': 70,   # Default weight in kg
+            'age': 25,      # Default age
+            'gender': 'M'   # Default gender
+        }
+    )
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile_obj)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=profile_obj)
+
+    context = {
+        'form': form,
+        'profile': profile_obj,
+        'year': datetime.now().year,
+    }
+    return render(request, 'app/profile.html', context)

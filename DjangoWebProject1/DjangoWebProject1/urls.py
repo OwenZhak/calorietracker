@@ -18,4 +18,5 @@ urlpatterns = [
         name='fooditem-autocomplete',
     ),
     path('calendar/', views.calendar, name='calendar'),
+    path('profile/', views.profile, name='profile'),
 ]
