@@ -29,16 +29,22 @@
 
         <table class="table food-log-table">
             <colgroup>
-                <col style="width: 40%;">
-                <col style="width: 20%;">
-                <col style="width: 20%;">
-                <col style="width: 20%;">
+                <col style="width: 28%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
             </colgroup>
             <thead>
                 <tr>
                     <th>Food Item</th>
                     <th class="text-center">Quantity (g)</th>
                     <th class="text-center">Calories</th>
+                    <th class="text-center">Proteins (g)</th>
+                    <th class="text-center">Carbs (g)</th>
+                    <th class="text-center">Fats (g)</th>
                     <th class="text-right">Actions</th>
                 </tr>
             </thead>
@@ -48,15 +54,23 @@
                     <td>{{ log.food_item.name }} ({{ log.food_item.manufacturer }})</td>
                     <td class="text-center">{{ log.quantity_in_grams }}</td>
                     <td class="text-center">{{ log.total_calories|floatformat:0 }}</td>
+                    <td class="text-center">{{ log.total_proteins|floatformat:1 }}</td>
+                    <td class="text-center">{{ log.total_carbohydrates|floatformat:1 }}</td>
+                    <td class="text-center">{{ log.total_fats|floatformat:1 }}</td>
                     <td class="text-right">
                         <a href="{% url 'edit_food_log' log.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                     </td>
                 </tr>
-        {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
 
-        <p class="text-center">Total Calories: {{ total_calories|floatformat:0 }}</p>
+        <div class="text-center">
+            <p>Total Calories: {{ total_calories|floatformat:0 }}</p>
+            <p>Total Proteins: {{ total_proteins|floatformat:1 }}g | 
+               Total Carbs: {{ total_carbohydrates|floatformat:1 }}g | 
+               Total Fats: {{ total_fats|floatformat:1 }}g</p>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

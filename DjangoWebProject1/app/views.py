@@ -63,6 +63,10 @@ def log_food(request: HttpRequest):
 
     food_item_logs = FoodItemLog.objects.filter(user=request.user, date=selected_date)
     total_calories = sum(log.total_calories for log in food_item_logs)
+        # Add these lines to calculate total macronutrients
+    total_proteins = sum(log.total_proteins for log in food_item_logs)
+    total_carbohydrates = sum(log.total_carbohydrates for log in food_item_logs)
+    total_fats = sum(log.total_fats for log in food_item_logs)
 
     return render(
         request,
@@ -74,6 +78,10 @@ def log_food(request: HttpRequest):
             'previous_date': previous_date.strftime('%Y-%m-%d'),
             'next_date': next_date.strftime('%Y-%m-%d'),
             'total_calories': total_calories,
+            # Add these lines to pass macronutrients to template
+            'total_proteins': total_proteins,
+            'total_carbohydrates': total_carbohydrates,
+            'total_fats': total_fats,
             'login_required': not request.user.is_authenticated,
             'year': year,
         }
