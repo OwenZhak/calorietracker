@@ -1,0 +1,24 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+<div class="mt-5">
+    <div class="d-flex justify-content-center align-items-center mb-2">
+        <a href="{% url 'calendar' %}?year={{ previous_year }}&month={{ previous_month }}" class="btn btn-outline-primary">Previous Month</a>
+        <h3 class="mb-0 mx-3">{{ year }} - {{ month }}</h3>
+        <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-primary">Next Month</a>
+    </div>
+
+    <div class="row">
+        {% for day in calendar_data %}
+        <div class="col-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ day.date.day }}</h5>
+                    <p class="card-text">{{ day.calories|floatformat:0 }} calories</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

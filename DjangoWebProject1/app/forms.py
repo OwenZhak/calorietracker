@@ -6,7 +6,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 from dal import autocomplete
-from .models import FoodItemLog, FoodItem
+from .models import FoodItemLog, FoodItem, Profile
 
 class BootstrapAuthenticationForm(AuthenticationForm):
     """Authentication form which uses bootstrap CSS."""
@@ -59,4 +59,16 @@ class EditFoodItemLogForm(forms.ModelForm):
                 }
             ),
             'quantity_in_grams': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity in grams'}),
+        }
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['height', 'weight', 'age', 'gender']
+        widgets = {
+            'height': forms.NumberInput(attrs={'class': 'form-control'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control'}),
+            'age': forms.NumberInput(attrs={'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-control'}),
         }
