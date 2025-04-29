@@ -62,6 +62,19 @@ class Profile(models.Model):
         help_text="Виберіть рівень вашої фізичної активності"
     )
 
+    WEIGHT_GOAL_CHOICES = (
+        (-1.0, 'Схуднути на 1 кг/тиждень'),
+        (-0.5, 'Схуднути на 0.5 кг/тиждень'),
+        (0, 'Підтримувати вагу'),
+        (0.5, 'Набрати 0.5 кг/тиждень'),
+        (1.0, 'Набрати 1 кг/тиждень'),
+    )
+    weight_goal = models.FloatField(
+        choices=WEIGHT_GOAL_CHOICES,
+        default=0,
+        help_text="Оберіть ціль зміни ваги"
+    )
+
     @property
     def calculate_bmr(self):
         """Calculate Basal Metabolic Rate using Mifflin-St Jeor Equation"""
@@ -71,11 +84,18 @@ class Profile(models.Model):
             bmr = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) - 161
         return round(bmr)
 
-    # Update the daily_calories property
     @property
     def daily_calories(self):
-        """Estimate daily calories needed (BMR * activity factor)"""
-        return round(self.calculate_bmr * self.activity_level)
+        """Calculate daily calories based on BMR, activity and weight goal"""
+        maintenance_calories = self.calculate_bmr * self.activity_level
+        # Calculate calories adjustment for weight goal
+        daily_adjustment = (self.weight_goal * 7700) / 7
+        
+        total_calories = maintenance_calories + daily_adjustment
+        
+        # Ensure minimum healthy calories (1200 for women, 1500 for men)
+        min_calories = 1200 if self.gender == 'F' else 1500
+        return max(round(total_calories), min_calories)
 
     @property
     def daily_protein_needs(self):
@@ -101,5 +121,6 @@ def create_user_profile(sender, instance, created, **kwargs):
             weight=70,
             age=25,
             gender='M',
-            activity_level=1.375  # Add default activity level
+            activity_level=1.375,
+            weight_goal=0  # Default to maintaining weight
         )

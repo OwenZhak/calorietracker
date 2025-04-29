@@ -1,7 +1,7 @@
 {% extends "app/layout.html" %}
 
 {% block content %}
-<div class="mt-5">
+<div class="mt-3">
     <div class="d-flex justify-content-center align-items-center mb-2">
         <a href="{% url 'calendar' %}?year={{ previous_year }}&month={{ previous_month }}" class="btn btn-outline-primary">Previous Month</a>
         <h3 class="mb-0 mx-3">{{ year }} - {{ month }}</h3>

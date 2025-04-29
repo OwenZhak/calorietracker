@@ -168,14 +168,15 @@ def register(request):
 
 @login_required
 def profile(request):
-    # Get or create profile
     profile_obj, created = Profile.objects.get_or_create(
         user=request.user,
         defaults={
-            'height': 170,  # Default height in cm
-            'weight': 70,   # Default weight in kg
-            'age': 25,      # Default age
-            'gender': 'M'   # Default gender
+            'height': 170,
+            'weight': 70,
+            'age': 25,
+            'gender': 'M',
+            'activity_level': 1.375,
+            'weight_goal': 0
         }
     )
 
