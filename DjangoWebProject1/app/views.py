@@ -10,11 +10,12 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from dal import autocomplete
-from .models import FoodItemLog, FoodItem, Profile
-from .forms import FoodItemLogForm, EditFoodItemLogForm, ProfileForm
+from .models import FoodItemLog, FoodItem, Profile, PendingFoodItem
+from .forms import FoodItemLogForm, EditFoodItemLogForm, ProfileForm, PendingFoodItemForm
 import unicodedata
 from calendar import monthrange
 import calendar as cal
+from django.contrib import messages
 
 class FoodItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -43,39 +44,56 @@ class FoodItemAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 @login_required
-def log_food(request: HttpRequest):
-    selected_date_str = request.GET.get('date')
-    selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date() if selected_date_str else datetime.now().date()
-    previous_date = selected_date - timedelta(days=1)
-    next_date = selected_date + timedelta(days=1)
-    year = datetime.now().year
+def log_food(request):
+    # First ensure user has a profile
+    profile_obj, created = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'height': 170,
+            'weight': 70,
+            'age': 25,
+            'gender': 'M',
+            'activity_level': 1.375,
+            'weight_goal': 0
+        }
+    )
 
+    # Get the selected date
+    selected_date = request.GET.get('date', datetime.now().date())
+    if isinstance(selected_date, str):
+        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+
+    # Handle form submission
     if request.method == 'POST':
         form = FoodItemLogForm(request.POST)
         if form.is_valid():
-            food_item_log = form.save(commit=False)
-            food_item_log.user = request.user
-            food_item_log.date = selected_date
-            food_item_log.save()
+            food_log = form.save(commit=False)
+            food_log.user = request.user
+            food_log.date = selected_date
+            food_log.save()
             return redirect(f'/log_food/?date={selected_date.strftime("%Y-%m-%d")}')
     else:
         form = FoodItemLogForm()
 
+    # Calculate next and previous dates
+    next_date = selected_date + timedelta(days=1)
+    previous_date = selected_date - timedelta(days=1)
+
+    # Get food logs for the selected date
     food_item_logs = FoodItemLog.objects.filter(user=request.user, date=selected_date)
     total_calories = sum(log.total_calories for log in food_item_logs)
     total_proteins = sum(log.total_proteins for log in food_item_logs)
     total_carbohydrates = sum(log.total_carbohydrates for log in food_item_logs)
     total_fats = sum(log.total_fats for log in food_item_logs)
-    
-    # Add these lines
-    recommended_calories = request.user.profile.daily_calories
-    recommended_proteins = request.user.profile.daily_protein_needs
-    recommended_carbs = request.user.profile.daily_carbs_needs
-    recommended_fats = request.user.profile.daily_fat_needs
+
+    recommended_calories = profile_obj.daily_calories
+    recommended_proteins = profile_obj.daily_protein_needs
+    recommended_carbs = profile_obj.daily_carbs_needs
+    recommended_fats = profile_obj.daily_fat_needs
     remaining_calories = recommended_calories - total_calories
 
     context = {
-        'form': form,
+        'form': form,  # Changed from FoodItemLogForm to form instance
         'food_item_logs': food_item_logs,
         'selected_date': selected_date,
         'previous_date': previous_date.strftime('%Y-%m-%d'),
@@ -90,7 +108,7 @@ def log_food(request: HttpRequest):
         'recommended_fats': recommended_fats,
         'remaining_calories': remaining_calories,
         'login_required': not request.user.is_authenticated,
-        'year': year,
+        'year': selected_date.year,
     }
     return render(request, 'app/log_food.html', context)
 
@@ -194,3 +212,26 @@ def profile(request):
         'year': datetime.now().year,
     }
     return render(request, 'app/profile.html', context)
+
+
+@login_required
+def submit_food(request):
+    if request.method == 'POST':
+        form = PendingFoodItemForm(request.POST)
+        if form.is_valid():
+            pending_food = form.save(commit=False)
+            pending_food.submitted_by = request.user
+            pending_food.save()
+            messages.success(request, 'Продукт додано на розгляд. Дякуємо за внесок!')
+            return redirect('log_food')
+    else:
+        form = PendingFoodItemForm()
+    
+    return render(request, 'app/submit_food.html', {'form': form})
+
+@login_required
+def pending_foods(request):
+    pending_items = PendingFoodItem.objects.filter(status='pending')
+    return render(request, 'app/pending_foods.html', {
+        'pending_items': pending_items,
+    })

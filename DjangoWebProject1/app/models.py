@@ -122,5 +122,26 @@ def create_user_profile(sender, instance, created, **kwargs):
             age=25,
             gender='M',
             activity_level=1.375,
-            weight_goal=0  # Default to maintaining weight
+            weight_goal=0
         )
+
+class PendingFoodItem(models.Model):
+    name = models.CharField(max_length=100)
+    manufacturer = models.CharField(max_length=100)
+    calories_per_100g = models.FloatField()
+    proteins_per_100g = models.FloatField(default=0)
+    carbohydrates_per_100g = models.FloatField(default=0)
+    fats_per_100g = models.FloatField(default=0)
+    submitted_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    submitted_date = models.DateTimeField(auto_now_add=True)
+    votes_to_approve = models.ManyToManyField(User, related_name='voted_pending_foods', blank=True)
+    
+    STATUS_CHOICES = (
+        ('pending', 'На розгляді'),
+        ('approved', 'Підтверджено'),
+        ('rejected', 'Відхилено'),
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    def __str__(self):
+        return f"{self.name} ({self.manufacturer}) - {self.get_status_display()}"

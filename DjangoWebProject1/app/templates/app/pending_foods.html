@@ -1,0 +1,42 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Продукти на розгляді</h2>
+    
+    {% if pending_items %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Назва</th>
+                        <th>Виробник</th>
+                        <th>Калорії</th>
+                        <th>Білки</th>
+                        <th>Вуглеводи</th>
+                        <th>Жири</th>
+                        <th>Додав</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pending_items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.manufacturer }}</td>
+                        <td>{{ item.calories_per_100g }}</td>
+                        <td>{{ item.proteins_per_100g }}</td>
+                        <td>{{ item.carbohydrates_per_100g }}</td>
+                        <td>{{ item.fats_per_100g }}</td>
+                        <td>{{ item.submitted_by.username }}</td>
+                        <td>{{ item.submitted_date|date:"Y-m-d" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>Наразі немає продуктів на розгляді.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Додати новий продукт</h2>
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="alert alert-danger">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Відправити на розгляд</button>
+                <a href="{% url 'log_food' %}" class="btn btn-secondary">Скасувати</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

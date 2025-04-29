@@ -19,4 +19,6 @@ urlpatterns = [
     ),
     path('calendar/', views.calendar, name='calendar'),
     path('profile/', views.profile, name='profile'),
+    path('submit-food/', views.submit_food, name='submit_food'),
+    path('pending-foods/', views.pending_foods, name='pending_foods'),
 ]

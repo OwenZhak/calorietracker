@@ -46,8 +46,13 @@
             <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
             
             {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Log Food</button>
+            <button type="submit" class="btn btn-primary">Add Food</button>
         </form>
+        <div class="text-center mt-2">
+            <a href="{% url 'submit_food' %}" class="btn btn-outline-success">
+                <i class="fas fa-plus"></i> Додати новий продукт до бази даних
+            </a>
+        </div>
 
         <h3 class="text-center mt-4">Food Log</h3>
 
