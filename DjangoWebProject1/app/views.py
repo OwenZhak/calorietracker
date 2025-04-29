@@ -235,3 +235,35 @@ def pending_foods(request):
     return render(request, 'app/pending_foods.html', {
         'pending_items': pending_items,
     })
+
+
+@login_required
+def review_foods(request):
+    pending_items = PendingFoodItem.objects.filter(status='pending')
+    return render(request, 'app/review_foods.html', {'pending_items': pending_items})
+
+@login_required
+def approve_food(request, food_id):
+    if request.method == 'POST':
+        pending_food = get_object_or_404(PendingFoodItem, id=food_id)
+        # Create new FoodItem
+        FoodItem.objects.create(
+            name=pending_food.name,
+            manufacturer=pending_food.manufacturer,
+            calories_per_100g=pending_food.calories_per_100g,
+            proteins_per_100g=pending_food.proteins_per_100g,
+            carbohydrates_per_100g=pending_food.carbohydrates_per_100g,
+            fats_per_100g=pending_food.fats_per_100g
+        )
+        # Delete pending food item
+        pending_food.delete()
+        messages.success(request, f'Продукт "{pending_food.name}" додано до бази даних.')
+    return redirect('review_foods')
+
+@login_required
+def reject_food(request, food_id):
+    if request.method == 'POST':
+        pending_food = get_object_or_404(PendingFoodItem, id=food_id)
+        pending_food.delete()
+        messages.warning(request, f'Продукт "{pending_food.name}" відхилено.')
+    return redirect('review_foods')

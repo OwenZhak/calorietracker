@@ -21,4 +21,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('submit-food/', views.submit_food, name='submit_food'),
     path('pending-foods/', views.pending_foods, name='pending_foods'),
+    path('review-foods/', views.review_foods, name='review_foods'),
+    path('approve-food/<int:food_id>/', views.approve_food, name='approve_food'),
+    path('reject-food/<int:food_id>/', views.reject_food, name='reject_food'),
 ]

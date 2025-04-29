@@ -1,0 +1,42 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Перевірка нових продуктів</h2>
+    
+    <div class="row">
+        {% for item in pending_items %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.name }}</h5>
+                    <p class="card-text">Виробник: {{ item.manufacturer }}</p>
+                    <div class="nutrition-info">
+                        <p>Калорії: {{ item.calories_per_100g }} ккал/100г</p>
+                        <p>Білки: {{ item.proteins_per_100g }}г/100г</p>
+                        <p>Вуглеводи: {{ item.carbohydrates_per_100g }}г/100г</p>
+                        <p>Жири: {{ item.fats_per_100g }}г/100г</p>
+                    </div>
+                    <p class="text-muted">Додав: {{ item.submitted_by.username }}</p>
+                    <p class="mt-3">Чи виглядають ці значення логічними?</p>
+                    <div class="d-flex justify-content-between mt-3">
+                        <form method="post" action="{% url 'approve_food' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Так, все вірно</button>
+                        </form>
+                        <form method="post" action="{% url 'reject_food' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Ні, щось не так</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <p>Наразі немає продуктів для перевірки.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
