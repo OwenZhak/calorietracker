@@ -65,10 +65,11 @@ class EditFoodItemLogForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['height', 'weight', 'age', 'gender']
+        fields = ['height', 'weight', 'age', 'gender', 'activity_level']
         widgets = {
             'height': forms.NumberInput(attrs={'class': 'form-control'}),
             'weight': forms.NumberInput(attrs={'class': 'form-control'}),
             'age': forms.NumberInput(attrs={'class': 'form-control'}),
             'gender': forms.Select(attrs={'class': 'form-control'}),
+            'activity_level': forms.Select(attrs={'class': 'form-control'}),
         }

@@ -47,6 +47,20 @@ class Profile(models.Model):
         ('F', 'Female'),
     )
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    
+    # Add new field
+    ACTIVITY_CHOICES = (
+        (1.2, 'Малорухливий спосіб життя, відсутність фізичних навантажень'),
+        (1.375, 'Легка активність (легкі тренування 1-3 рази на тиждень)'),
+        (1.55, 'Помірна активність (помірні тренування 3-5 разів на тиждень)'),
+        (1.725, 'Висока активність (інтенсивні тренування 6-7 разів на тиждень)'),
+        (1.9, 'Дуже висока активність (важкі фізичні навантаження, тренування 2 рази на день)'),
+    )
+    activity_level = models.FloatField(
+        choices=ACTIVITY_CHOICES, 
+        default=1.375,
+        help_text="Виберіть рівень вашої фізичної активності"
+    )
 
     @property
     def calculate_bmr(self):
@@ -57,11 +71,11 @@ class Profile(models.Model):
             bmr = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) - 161
         return round(bmr)
 
+    # Update the daily_calories property
     @property
     def daily_calories(self):
         """Estimate daily calories needed (BMR * activity factor)"""
-        activity_factor = 1.375  # Assuming light exercise
-        return round(self.calculate_bmr * activity_factor)
+        return round(self.calculate_bmr * self.activity_level)
 
     @property
     def daily_protein_needs(self):
@@ -83,8 +97,9 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(
             user=instance,
-            height=170,  # Default height in cm
-            weight=70,   # Default weight in kg
-            age=25,      # Default age
-            gender='M'   # Default gender
+            height=170,
+            weight=70,
+            age=25,
+            gender='M',
+            activity_level=1.375  # Add default activity level
         )
