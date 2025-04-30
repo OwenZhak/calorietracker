@@ -134,14 +134,8 @@ class PendingFoodItem(models.Model):
     fats_per_100g = models.FloatField(default=0)
     submitted_by = models.ForeignKey(User, on_delete=models.CASCADE)
     submitted_date = models.DateTimeField(auto_now_add=True)
-    votes_to_approve = models.ManyToManyField(User, related_name='voted_pending_foods', blank=True)
-    
-    STATUS_CHOICES = (
-        ('pending', 'На розгляді'),
-        ('approved', 'Підтверджено'),
-        ('rejected', 'Відхилено'),
-    )
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    votes_to_approve = models.ManyToManyField(User, related_name='voted_approve_pending_foods', blank=True)
+    votes_to_reject = models.ManyToManyField(User, related_name='voted_reject_pending_foods', blank=True)
 
     def __str__(self):
-        return f"{self.name} ({self.manufacturer}) - {self.get_status_display()}"
+        return f"{self.name} ({self.manufacturer}) - За: {self.votes_to_approve.count()}, Проти: {self.votes_to_reject.count()}"

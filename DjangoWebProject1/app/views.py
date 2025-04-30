@@ -239,31 +239,75 @@ def pending_foods(request):
 
 @login_required
 def review_foods(request):
-    pending_items = PendingFoodItem.objects.filter(status='pending')
+    # Get all pending food items
+    pending_items = PendingFoodItem.objects.all()
     return render(request, 'app/review_foods.html', {'pending_items': pending_items})
 
 @login_required
 def approve_food(request, food_id):
     if request.method == 'POST':
         pending_food = get_object_or_404(PendingFoodItem, id=food_id)
-        # Create new FoodItem
-        FoodItem.objects.create(
-            name=pending_food.name,
-            manufacturer=pending_food.manufacturer,
-            calories_per_100g=pending_food.calories_per_100g,
-            proteins_per_100g=pending_food.proteins_per_100g,
-            carbohydrates_per_100g=pending_food.carbohydrates_per_100g,
-            fats_per_100g=pending_food.fats_per_100g
-        )
-        # Delete pending food item
-        pending_food.delete()
-        messages.success(request, f'Продукт "{pending_food.name}" додано до бази даних.')
+        
+        # Check if user is the creator
+        if pending_food.submitted_by == request.user:
+            messages.warning(request, 'Ви не можете голосувати за власний продукт.')
+            return redirect('review_foods')
+            
+        # Check if user has already voted to reject
+        if request.user in pending_food.votes_to_reject.all():
+            messages.warning(request, 'Ви вже проголосували проти цього продукту.')
+            return redirect('review_foods')
+        
+        # Check if user hasn't already voted to approve
+        if request.user not in pending_food.votes_to_approve.all():
+            pending_food.votes_to_approve.add(request.user)
+            pending_food.save()
+            
+            if pending_food.votes_to_approve.count() >= 3:
+                FoodItem.objects.create(
+                    name=pending_food.name,
+                    manufacturer=pending_food.manufacturer,
+                    calories_per_100g=pending_food.calories_per_100g,
+                    proteins_per_100g=pending_food.proteins_per_100g,
+                    carbohydrates_per_100g=pending_food.carbohydrates_per_100g,
+                    fats_per_100g=pending_food.fats_per_100g
+                )
+                pending_food.delete()
+                messages.success(request, f'Продукт "{pending_food.name}" додано до бази даних.')
+            else:
+                messages.info(request, f'Ваш голос "за" зараховано. Потрібно ще {3 - pending_food.votes_to_approve.count()} голосів.')
+        else:
+            messages.warning(request, 'Ви вже проголосували за цей продукт.')
+            
     return redirect('review_foods')
 
 @login_required
 def reject_food(request, food_id):
     if request.method == 'POST':
         pending_food = get_object_or_404(PendingFoodItem, id=food_id)
-        pending_food.delete()
-        messages.warning(request, f'Продукт "{pending_food.name}" відхилено.')
+        
+        # Check if user is the creator
+        if pending_food.submitted_by == request.user:
+            messages.warning(request, 'Ви не можете голосувати за власний продукт.')
+            return redirect('review_foods')
+            
+        # Check if user has already voted to approve
+        if request.user in pending_food.votes_to_approve.all():
+            messages.warning(request, 'Ви вже проголосували за цей продукт.')
+            return redirect('review_foods')
+        
+        # Check if user hasn't already voted to reject
+        if request.user not in pending_food.votes_to_reject.all():
+            pending_food.votes_to_reject.add(request.user)
+            pending_food.save()
+            
+            if pending_food.votes_to_reject.count() >= 3:
+                name = pending_food.name
+                pending_food.delete()
+                messages.warning(request, f'Продукт "{name}" відхилено.')
+            else:
+                messages.info(request, f'Ваш голос "проти" зараховано. Потрібно ще {3 - pending_food.votes_to_reject.count()} голосів.')
+        else:
+            messages.warning(request, 'Ви вже проголосували проти цього продукту.')
+            
     return redirect('review_foods')
