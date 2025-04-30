@@ -3,6 +3,8 @@ Definition of views.
 """
 
 from datetime import datetime, timedelta
+from django.db.models import Sum, Count
+from collections import defaultdict
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
@@ -311,3 +313,67 @@ def reject_food(request, food_id):
             messages.warning(request, 'Ви вже проголосували проти цього продукту.')
             
     return redirect('review_foods')
+
+@login_required
+def recommendations(request):
+    # Get logs from the last 3 days
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=3)
+    
+    # Get user's food logs
+    food_logs = FoodItemLog.objects.filter(
+        user=request.user,
+        date__range=(start_date, end_date)
+    ).select_related('food_item')
+
+    # Check if we have any logs
+    if not food_logs.exists():
+        context = {
+            'no_data': True,
+            'message': 'Для отримання рекомендацій потрібно додати більше записів про харчування.',
+            'sub_message': 'Додайте кілька прийомів їжі, і ми зможемо надати вам персоналізовані поради щодо харчування.'
+        }
+        return render(request, 'app/recommendations.html', context)
+
+    # Analyze eating habits
+    recommendations = []
+    category_counts = defaultdict(int)
+    category_calories = defaultdict(float)
+    
+    # Calculate totals per category
+    for log in food_logs:
+        category = log.food_item.category
+        category_counts[category] += 1
+        category_calories[category] += log.total_calories
+
+    # Generate recommendations
+    if category_calories['fast_food'] > 500:
+        recommendations.append({
+            'type': 'warning',
+            'message': 'Ви споживаєте забагато фастфуду. Спробуйте замінити його на здоровішу їжу.',
+            'suggestions': ['овочі', 'фрукти', 'цільнозернові продукти']
+        })
+
+    if category_counts['vegetables'] < 2:
+        recommendations.append({
+            'type': 'suggestion',
+            'message': 'Додайте більше овочів до свого раціону для збалансованого харчування.',
+            'suggestions': ['салат', 'броколі', 'морква']
+        })
+
+    if category_calories['sweets'] > 300:
+        recommendations.append({
+            'type': 'warning',
+            'message': 'Високе споживання солодощів. Спробуйте замінити їх на фрукти.',
+            'suggestions': ['яблука', 'груші', 'ягоди']
+        })
+
+    context = {
+        'recommendations': recommendations,
+        'category_calories': dict(category_calories),
+        'category_counts': dict(category_counts),
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    
+    return render(request, 'app/recommendations.html', context)

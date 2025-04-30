@@ -24,4 +24,5 @@ urlpatterns = [
     path('review-foods/', views.review_foods, name='review_foods'),
     path('approve-food/<int:food_id>/', views.approve_food, name='approve_food'),
     path('reject-food/<int:food_id>/', views.reject_food, name='reject_food'),
+    path('recommendations/', views.recommendations, name='recommendations'),
 ]

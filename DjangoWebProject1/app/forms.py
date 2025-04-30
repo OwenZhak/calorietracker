@@ -79,12 +79,14 @@ class ProfileForm(forms.ModelForm):
 class PendingFoodItemForm(forms.ModelForm):
     class Meta:
         model = PendingFoodItem
-        fields = ['name', 'manufacturer', 'calories_per_100g', 'proteins_per_100g', 
-                         'carbohydrates_per_100g', 'fats_per_100g']
+        fields = ['name', 'manufacturer', 'category', 'calories_per_100g', 
+                 'proteins_per_100g', 'carbohydrates_per_100g', 'fats_per_100g']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'manufacturer': forms.TextInput(attrs={'class': 'form-control'}),                'calories_per_100g': forms.NumberInput(attrs={'class': 'form-control'}),
+            'manufacturer': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'calories_per_100g': forms.NumberInput(attrs={'class': 'form-control'}),
             'proteins_per_100g': forms.NumberInput(attrs={'class': 'form-control'}),
             'carbohydrates_per_100g': forms.NumberInput(attrs={'class': 'form-control'}),
             'fats_per_100g': forms.NumberInput(attrs={'class': 'form-control'}),
-                }
+        }

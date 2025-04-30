@@ -4,15 +4,28 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class FoodItem(models.Model):
+    CATEGORY_CHOICES = (
+        ('fast_food', 'Фастфуд'),
+        ('fruits', 'Фрукти'),
+        ('vegetables', 'Овочі'),
+        ('meat', "М'ясо"),
+        ('dairy', 'Молочні продукти'),
+        ('grains', 'Крупи'),
+        ('sweets', 'Солодощі'),
+        ('drinks', 'Напої'),
+        ('other', 'Інше'),
+    )
+    
     name = models.CharField(max_length=100)
     manufacturer = models.CharField(max_length=100)
     calories_per_100g = models.FloatField()
     proteins_per_100g = models.FloatField(default=0)
     carbohydrates_per_100g = models.FloatField(default=0)
     fats_per_100g = models.FloatField(default=0)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
 
     def __str__(self):
-        return f"{self.name} ({self.manufacturer})"
+        return f"{self.name} ({self.manufacturer}) - {self.calories_per_100g:.0f} ккал/100г"
 
 class FoodItemLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -126,6 +139,19 @@ def create_user_profile(sender, instance, created, **kwargs):
         )
 
 class PendingFoodItem(models.Model):
+    CATEGORY_CHOICES = (
+        ('fast_food', 'Фастфуд'),
+        ('fruits', 'Фрукти'),
+        ('vegetables', 'Овочі'),
+        ('meat', "М'ясо"),
+        ('dairy', 'Молочні продукти'),
+        ('grains', 'Крупи'),
+        ('sweets', 'Солодощі'),
+        ('drinks', 'Напої'),
+        ('other', 'Інше'),
+    )
+    
+    category = models.CharField(max_length=20, choices=FoodItem.CATEGORY_CHOICES, default='other')
     name = models.CharField(max_length=100)
     manufacturer = models.CharField(max_length=100)
     calories_per_100g = models.FloatField()

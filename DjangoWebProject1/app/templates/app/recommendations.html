@@ -1,0 +1,70 @@
+{% extends "app/layout.html" %}
+{% load app_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    
+
+    {% if no_data %}
+        <div class="text-center">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">{{ message }}</h4>
+                <p>{{ sub_message }}</p>
+                <hr>
+                <p class="mb-0">
+                    <a href="{% url 'log_food' %}" class="btn btn-primary">
+                        Додати прийом їжі
+                    </a>
+                </p>
+            </div>
+        </div>
+    {% else %}
+        <h3 class="mb-4">Споживання за категоріями</h3>
+        <div class="row">
+            {% for category, calories in category_calories.items %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">{{ category|get_category_name }}</h5>
+                        <div class="card-text">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Калорії:</span>
+                                <span class="badge rounded-pill text-bg-light border">
+                                    {{ calories|floatformat:0 }} ккал
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Кількість страв:</span>
+                                <span class="badge rounded-pill text-bg-secondary">
+                                    {{ category_counts|get_item:category }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if recommendations %}
+            <h3 class="mt-4 mb-4">Персональні рекомендації</h3>
+            <div class="row">
+                {% for rec in recommendations %}
+                    <div class="col-md-12 mb-4">
+                        <div class="card {% if rec.type == 'warning' %}border-warning{% else %}border-info{% endif %}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ rec.message }}</h5>
+                                {% if rec.suggestions %}
+                                    <p class="card-text"><small class="text-muted">
+                                        Спробуйте: {{ rec.suggestions|join:", " }}
+                                    </small></p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
