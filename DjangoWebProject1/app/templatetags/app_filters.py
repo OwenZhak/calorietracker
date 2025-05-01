@@ -23,3 +23,18 @@ def get_category_name(category_key):
 def get_item(dictionary, key):
     """Get value from dictionary by key"""
     return dictionary.get(key, 0)
+
+
+@register.filter
+def divide_into_weeks(days):
+    """Divide days into weeks (lists of 7 days)"""
+    weeks = []
+    week = []
+    for day in days:
+        week.append(day)
+        if len(week) == 7:
+            weeks.append(week)
+            week = []
+    if week:
+        weeks.append(week)
+    return weeks

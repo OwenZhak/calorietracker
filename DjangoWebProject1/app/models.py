@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.core.cache import cache
 
 class FoodItem(models.Model):
     CATEGORY_CHOICES = (
@@ -137,6 +138,24 @@ def create_user_profile(sender, instance, created, **kwargs):
             activity_level=1.375,
             weight_goal=0
         )
+
+@receiver([post_save, post_delete], sender=FoodItemLog)
+def clear_food_log_cache(sender, instance, **kwargs):
+    """Clear cache when food log is saved or deleted"""
+    # Clear specific day cache
+    cache.delete(f'food_logs_{instance.user.id}_{instance.date}')
+    cache.delete(f'totals_{instance.user.id}_{instance.date}')
+    
+    # Clear calendar cache for the affected month
+    cache.delete(f'calendar_data_{instance.user.id}_{instance.date.year}_{instance.date.month}')
+    
+    # Clear recommendations
+    cache.delete(f'recommendations_{instance.user.id}')
+
+@receiver([post_save], sender=Profile)
+def clear_profile_cache(sender, instance, **kwargs):
+    """Clear user-related cache when profile is updated"""
+    cache.delete_pattern(f'*_{instance.user.id}_*')
 
 class PendingFoodItem(models.Model):
     CATEGORY_CHOICES = (

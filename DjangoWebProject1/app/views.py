@@ -3,10 +3,10 @@ Definition of views.
 """
 
 from datetime import datetime, timedelta
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F
 from collections import defaultdict
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -15,9 +15,11 @@ from dal import autocomplete
 from .models import FoodItemLog, FoodItem, Profile, PendingFoodItem
 from .forms import FoodItemLogForm, EditFoodItemLogForm, ProfileForm, PendingFoodItemForm
 import unicodedata
-from calendar import monthrange
+from calendar import monthrange, month_name
 import calendar as cal
 from django.contrib import messages
+from django.core.cache import cache
+from django.conf import settings
 
 class FoodItemAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -77,22 +79,37 @@ def log_food(request):
     else:
         form = FoodItemLogForm()
 
+    # Cache food logs for the day
+    cache_key = f'food_logs_{request.user.id}_{selected_date}'
+    food_item_logs = cache.get(cache_key)
+    
+    if food_item_logs is None:
+        food_item_logs = FoodItemLog.objects.filter(
+            user=request.user, 
+            date=selected_date
+        ).select_related('food_item')
+        cache.set(cache_key, food_item_logs, timeout=settings.CACHE_TTL)
+
+    # Calculate totals
+    totals = cache.get(f'totals_{request.user.id}_{selected_date}')
+    if totals is None:
+        totals = {
+            'calories': sum(log.total_calories for log in food_item_logs),
+            'proteins': sum(log.total_proteins for log in food_item_logs),
+            'carbs': sum(log.total_carbohydrates for log in food_item_logs),
+            'fats': sum(log.total_fats for log in food_item_logs)
+        }
+        cache.set(f'totals_{request.user.id}_{selected_date}', totals, timeout=settings.CACHE_TTL)
+
     # Calculate next and previous dates
     next_date = selected_date + timedelta(days=1)
     previous_date = selected_date - timedelta(days=1)
-
-    # Get food logs for the selected date
-    food_item_logs = FoodItemLog.objects.filter(user=request.user, date=selected_date)
-    total_calories = sum(log.total_calories for log in food_item_logs)
-    total_proteins = sum(log.total_proteins for log in food_item_logs)
-    total_carbohydrates = sum(log.total_carbohydrates for log in food_item_logs)
-    total_fats = sum(log.total_fats for log in food_item_logs)
 
     recommended_calories = profile_obj.daily_calories
     recommended_proteins = profile_obj.daily_protein_needs
     recommended_carbs = profile_obj.daily_carbs_needs
     recommended_fats = profile_obj.daily_fat_needs
-    remaining_calories = recommended_calories - total_calories
+    remaining_calories = recommended_calories - totals['calories']
 
     context = {
         'form': form,  # Changed from FoodItemLogForm to form instance
@@ -100,10 +117,10 @@ def log_food(request):
         'selected_date': selected_date,
         'previous_date': previous_date.strftime('%Y-%m-%d'),
         'next_date': next_date.strftime('%Y-%m-%d'),
-        'total_calories': total_calories,
-        'total_proteins': total_proteins,
-        'total_carbohydrates': total_carbohydrates,
-        'total_fats': total_fats,
+        'total_calories': totals['calories'],
+        'total_proteins': totals['proteins'],
+        'total_carbohydrates': totals['carbs'],
+        'total_fats': totals['fats'],
         'recommended_calories': recommended_calories,
         'recommended_proteins': recommended_proteins,
         'recommended_carbs': recommended_carbs,
@@ -144,30 +161,36 @@ def calendar(request):
     month = request.GET.get('month', datetime.now().month)
     year, month = int(year), int(month)
     
+    # Get first day and number of days in month
     first_day_of_month, days_in_month = monthrange(year, month)
-    dates = [datetime(year, month, day) for day in range(1, days_in_month + 1)]
     
-    calendar_data = []
-    for date in dates:
+    # Add empty days at start of month to align with correct weekday
+    calendar_data = [None] * first_day_of_month
+    
+    # Add actual days
+    for day in range(1, days_in_month + 1):
+        date = datetime(year, month, day).date()
         food_logs = FoodItemLog.objects.filter(user=request.user, date=date)
         total_calories = sum(log.total_calories for log in food_logs)
         calendar_data.append({
             'date': date,
-            'calories': total_calories
+            'calories': total_calories,
+            'exceeded': total_calories > request.user.profile.daily_calories
         })
     
-    month_name = cal.month_name[month]
+    # Add empty days at end to complete the last week
+    while len(calendar_data) % 7 != 0:
+        calendar_data.append(None)
     
     context = {
         'year': year,
-        'month': month_name,
+        'month': cal.month_name[month],
         'calendar_data': calendar_data,
         'previous_month': (month - 1) if month > 1 else 12,
         'previous_year': year if month > 1 else year - 1,
         'next_month': (month + 1) if month < 12 else 1,
         'next_year': year if month < 12 else year + 1,
     }
-    
     return render(request, 'app/calendar.html', context)
 
 def custom_logout(request):
@@ -376,4 +399,28 @@ def recommendations(request):
         'end_date': end_date,
     }
     
-    return render(request, 'app/recommendations.html', context)
+    cache_key = f'recommendations_{request.user.id}'
+    cached_data = cache.get(cache_key)
+    
+    if cached_data is None:
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=7)
+        
+        food_logs = FoodItemLog.objects.select_related('food_item').filter(
+            user=request.user,
+            date__range=(start_date, end_date)
+        )
+        
+        # Your existing recommendations calculation logic
+        # ...existing code...
+        
+        cached_data = {
+            'recommendations': recommendations,
+            'category_calories': dict(category_calories),
+            'category_counts': dict(category_counts),
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+        cache.set(cache_key, cached_data, timeout=settings.CACHE_TTL)
+    
+    return render(request, 'app/recommendations.html', cached_data)
