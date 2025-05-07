@@ -29,10 +29,22 @@ class FoodItem(models.Model):
         return f"{self.name} ({self.manufacturer}) - {self.calories_per_100g:.0f} ккал/100г"
 
 class FoodItemLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    food_item = models.ForeignKey(FoodItem, on_delete=models.CASCADE)
-    date = models.DateField()
-    quantity_in_grams = models.FloatField()
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        verbose_name="Користувач"
+    )
+    food_item = models.ForeignKey(
+        FoodItem, 
+        on_delete=models.CASCADE,
+        verbose_name="Продукт"
+    )
+    date = models.DateField(
+        verbose_name="Дата"
+    )
+    quantity_in_grams = models.FloatField(
+        verbose_name="Кількість (г)"
+    )
 
     @property
     def total_calories(self):
@@ -53,16 +65,27 @@ class FoodItemLog(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    height = models.FloatField(help_text="Height in cm")
-    weight = models.FloatField(help_text="Weight in kg")
-    age = models.IntegerField(default=25)
-    GENDER_CHOICES = (
-        ('M', 'Male'),
-        ('F', 'Female'),
+    height = models.FloatField(
+        verbose_name="Зріст (см)", 
+        help_text="Вкажіть ваш зріст у сантиметрах"
     )
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    
-    # Add new field
+    weight = models.FloatField(
+        verbose_name="Вага (кг)", 
+        help_text="Вкажіть вашу вагу у кілограмах"
+    )
+    age = models.IntegerField(
+        default=25, 
+        verbose_name="Вік"
+    )
+    GENDER_CHOICES = (
+        ('M', 'Чоловік'),
+        ('F', 'Жінка'),
+    )
+    gender = models.CharField(
+        max_length=1, 
+        choices=GENDER_CHOICES, 
+        verbose_name="Стать"
+    )
     ACTIVITY_CHOICES = (
         (1.2, 'Малорухливий спосіб життя, відсутність фізичних навантажень'),
         (1.375, 'Легка активність (легкі тренування 1-3 рази на тиждень)'),
@@ -73,9 +96,9 @@ class Profile(models.Model):
     activity_level = models.FloatField(
         choices=ACTIVITY_CHOICES, 
         default=1.375,
+        verbose_name="Рівень активності",
         help_text="Виберіть рівень вашої фізичної активності"
     )
-
     WEIGHT_GOAL_CHOICES = (
         (-1.0, 'Схуднути на 1 кг/тиждень'),
         (-0.5, 'Схуднути на 0.5 кг/тиждень'),
@@ -86,6 +109,7 @@ class Profile(models.Model):
     weight_goal = models.FloatField(
         choices=WEIGHT_GOAL_CHOICES,
         default=0,
+        verbose_name="Ціль ваги",
         help_text="Оберіть ціль зміни ваги"
     )
 

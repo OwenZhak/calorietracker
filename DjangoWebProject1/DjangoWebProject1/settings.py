@@ -117,7 +117,7 @@ STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
 LOGIN_URL = '/login/'  # Change this line
 LOGIN_REDIRECT_URL = '/log_food/'
 
-# Redis Cache Configuration
+# Конфігурація Redis
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -128,9 +128,11 @@ CACHES = {
     }
 }
 
-# Cache timeout (15 minutes)
+# Тайм-аут кешу
 CACHE_TTL = 60 * 15
 
-# Use Redis for sessions
+# Сесії
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

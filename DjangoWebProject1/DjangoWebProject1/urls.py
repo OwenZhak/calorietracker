@@ -25,4 +25,5 @@ urlpatterns = [
     path('approve-food/<int:food_id>/', views.approve_food, name='approve_food'),
     path('reject-food/<int:food_id>/', views.reject_food, name='reject_food'),
     path('recommendations/', views.recommendations, name='recommendations'),
+    path('delete_food_log/<int:log_id>/', views.delete_food_log, name='delete_food_log'),
 ]

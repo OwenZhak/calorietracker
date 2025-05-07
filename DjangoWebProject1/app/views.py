@@ -75,6 +75,7 @@ def log_food(request):
             food_log.user = request.user
             food_log.date = selected_date
             food_log.save()
+            clear_recommendation_cache(request.user.id, selected_date)
             return redirect(f'/log_food/?date={selected_date.strftime("%Y-%m-%d")}')
     else:
         form = FoodItemLogForm()
@@ -139,6 +140,7 @@ def edit_food_log(request, log_id):
         form = EditFoodItemLogForm(request.POST, instance=log_entry)
         if form.is_valid():
             form.save()
+            clear_recommendation_cache(request.user.id, log_entry.date)
             selected_date = log_entry.date.strftime('%Y-%m-%d')
             return redirect(f'/log_food/?date={selected_date}')
     else:
@@ -337,90 +339,105 @@ def reject_food(request, food_id):
             
     return redirect('review_foods')
 
+
 @login_required
 def recommendations(request):
-    # Get logs from the last 3 days
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=3)
+    # Get today's date
+    current_date = datetime.now().date()
     
-    # Get user's food logs
+    # Get user's food logs for today
     food_logs = FoodItemLog.objects.filter(
         user=request.user,
-        date__range=(start_date, end_date)
+        date=current_date
     ).select_related('food_item')
 
     # Check if we have any logs
     if not food_logs.exists():
         context = {
             'no_data': True,
-            'message': 'Для отримання рекомендацій потрібно додати більше записів про харчування.',
-            'sub_message': 'Додайте кілька прийомів їжі, і ми зможемо надати вам персоналізовані поради щодо харчування.'
+            'message': 'Для отримання рекомендацій потрібно додати записи про харчування за сьогодні.',
+            'sub_message': 'Додайте прийоми їжі за сьогодні, і ми зможемо надати вам персоналізовані поради.'
         }
         return render(request, 'app/recommendations.html', context)
 
-    # Analyze eating habits
+    # Get user profile for recommendations
+    profile = request.user.profile
+    
+    # Initialize analysis variables
     recommendations = []
     category_counts = defaultdict(int)
     category_calories = defaultdict(float)
+    total_calories = 0
+    total_proteins = 0
+    total_carbs = 0
+    total_fats = 0
     
-    # Calculate totals per category
+    # Calculate totals
     for log in food_logs:
         category = log.food_item.category
         category_counts[category] += 1
         category_calories[category] += log.total_calories
+        total_calories += log.total_calories
+        total_proteins += log.total_proteins
+        total_carbs += log.total_carbohydrates
+        total_fats += log.total_fats
 
     # Generate recommendations
-    if category_calories['fast_food'] > 500:
+    if category_calories['fast_food'] > 800:
         recommendations.append({
             'type': 'warning',
-            'message': 'Ви споживаєте забагато фастфуду. Спробуйте замінити його на здоровішу їжу.',
+            'message': 'Ви споживаєте забагато фастфуду сьогодні.',
             'suggestions': ['овочі', 'фрукти', 'цільнозернові продукти']
         })
 
-    if category_counts['vegetables'] < 2:
+    if category_counts['vegetables'] < 3:
         recommendations.append({
             'type': 'suggestion',
-            'message': 'Додайте більше овочів до свого раціону для збалансованого харчування.',
-            'suggestions': ['салат', 'броколі', 'морква']
+            'message': 'Додайте більше овочів до сьогоднішнього раціону.',
+            'suggestions': ['салат', 'броколі', 'морква', 'шпинат']
         })
 
-    if category_calories['sweets'] > 300:
+    # Add more recommendations based on daily values
+    if total_calories > profile.daily_calories:
         recommendations.append({
             'type': 'warning',
-            'message': 'Високе споживання солодощів. Спробуйте замінити їх на фрукти.',
-            'suggestions': ['яблука', 'груші', 'ягоди']
+            'message': 'Перевищено денну норму калорій.',
+            'suggestions': ['зменшити порції', 'більше води', 'легка вечеря']
         })
 
+    # Prepare data for caching
     context = {
         'recommendations': recommendations,
         'category_calories': dict(category_calories),
         'category_counts': dict(category_counts),
-        'start_date': start_date,
-        'end_date': end_date,
+        'date': current_date,
+        'total_calories': total_calories,
+        'total_proteins': total_proteins,
+        'total_carbs': total_carbs,
+        'total_fats': total_fats,
+        'daily_calories': profile.daily_calories,
+        'daily_proteins': profile.daily_protein_needs,
+        'daily_carbs': profile.daily_carbs_needs,
+        'daily_fats': profile.daily_fat_needs
     }
     
-    cache_key = f'recommendations_{request.user.id}'
-    cached_data = cache.get(cache_key)
+    # Cache the results with a shorter timeout
+    cache_key = f'recommendations_{request.user.id}_{current_date}'
+    cache.set(cache_key, context, timeout=300)  # 5 minutes timeout
     
-    if cached_data is None:
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=7)
-        
-        food_logs = FoodItemLog.objects.select_related('food_item').filter(
-            user=request.user,
-            date__range=(start_date, end_date)
-        )
-        
-        # Your existing recommendations calculation logic
-        # ...existing code...
-        
-        cached_data = {
-            'recommendations': recommendations,
-            'category_calories': dict(category_calories),
-            'category_counts': dict(category_counts),
-            'start_date': start_date,
-            'end_date': end_date,
-        }
-        cache.set(cache_key, cached_data, timeout=settings.CACHE_TTL)
-    
-    return render(request, 'app/recommendations.html', cached_data)
+    return render(request, 'app/recommendations.html', context)
+
+
+def clear_recommendation_cache(user_id, date):
+    """Helper function to clear recommendation cache for a specific user and date"""
+    cache_key = f'recommendations_{user_id}_{date}'
+    cache.delete(cache_key)
+
+@login_required
+def delete_food_log(request, log_id):
+    """Delete a food log entry"""
+    log_entry = get_object_or_404(FoodItemLog, id=log_id, user=request.user)
+    date = log_entry.date
+    log_entry.delete()
+    clear_recommendation_cache(request.user.id, date)
+    return redirect(f'/log_food/?date={date.strftime("%Y-%m-%d")}')
